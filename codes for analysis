@@ -1,0 +1,307 @@
+#count number of rows
+SELECT COUNT (*)
+FROM `imdb-429423.movie_rank.movies`
+#row count:1000
+----
+#check for null values
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Poster_Link IS NULL
+#0 null values
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Series_Title IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Released_Year IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Certificate IS NULL
+#101 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Runtime IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Genre IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE IMDB_Rating IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Overview IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Meta_score IS NULL
+#157 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Director IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Star1 IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Star2 IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Star3 IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Star4 IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE No_of_Votes IS NULL
+#0 null values
+
+SELECT *
+FROM `imdb-429423.movie_rank.movies`
+WHERE Gross IS NULL
+#169 null values
+---
+#dropping null values 
+UPDATE
+    `imdb-429423.movie_rank.movies`
+  SET
+    Certificate = CASE
+      WHEN Certificate IS NULL THEN '(BLANK)'
+      ELSE Certificate
+    END
+  WHERE Certificate IS NULL;
+#101 rows mofified 
+
+UPDATE
+    `imdb-429423.movie_rank.movies`
+  SET
+    Gross = IF(Gross IS NULL, 0, Gross)
+  WHERE Gross IS NULL;
+#169 rows modified
+---
+UPDATE
+    `imdb-429423.movie_rank.movies`
+  SET
+    Meta_score= IF(Meta_score IS NULL, 0, Meta_score)
+  WHERE Meta_score IS NULL;
+#157 rows modified 
+---
+#checking for duplicate values
+SELECT Poster_Link
+FROM `imdb-429423.movie_rank.movies`
+WHERE Poster_Link IN (
+  SELECT Poster_Link
+  FROM `imdb-429423.movie_rank.movies`
+  GROUP BY Poster_Link
+  HAVING COUNT(*) > 1
+)
+#0 duplicates 
+SELECT Series_Title
+FROM `imdb-429423.movie_rank.movies`
+WHERE Series_Title IN (
+  SELECT Series_Title
+  FROM `imdb-429423.movie_rank.movies`
+  GROUP BY Series_Title
+  HAVING COUNT(*) > 1
+)
+
+SELECT * 
+FROM `imdb-429423.movie_rank.movies`
+WHERE Series_Title ='Drishyam'
+#same series title but different years made and different directors
+#two seperate movie types 
+#2013 version/ director Jeethu Joseph 
+#2015 version/ director Nishikant Kamat
+
+SELECT Overview
+FROM `imdb-429423.movie_rank.movies`
+WHERE Overview IN (
+  SELECT Overview
+  FROM `imdb-429423.movie_rank.movies`
+  GROUP BY Overview
+  HAVING COUNT(*) > 1
+)
+#0 duplicates 
+---
+#top 10 movies by IMDB rating 
+SELECT
+    Poster_Link,
+    Series_Title,
+    MAX(IMDB_Rating) AS IMDB_Rating,
+    Released_Year,
+    Certificate,
+    Runtime,
+    Genre,
+    Overview,
+    Meta_score,
+    Director,
+    Star1,
+    Star2,
+    Star3,
+    Star4,
+    No_of_Votes,
+    Gross
+  FROM
+    `imdb-429423.movie_rank.movies`
+  GROUP BY 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+ORDER BY
+  IMDB_Rating DESC
+LIMIT 10;
+---
+#Gross of top 10 films 
+SELECT
+    Series_Title,
+    IMDB_Rating,
+    Director,
+    Gross
+  FROM
+    `imdb-429423.movie_rank.movies`
+ORDER BY
+  IMDB_Rating DESC
+LIMIT 10;
+---
+#Runtime of top 10 films 
+SELECT 
+    Series_Title,
+    IMDB_Rating,
+    Director,
+    Runtime
+  FROM 
+  `imdb-429423.movie_rank.movies`
+ORDER BY 
+  IMDB_Rating DESC
+LIMIT 10;
+---
+#total amount of movies made by certificate type 
+SELECT
+    Certificate,
+    count(Certificate) AS total_amount
+  FROM
+    `imdb-429423.movie_rank.movies` AS movies
+  GROUP BY 1
+ORDER BY
+  count(Certificate) DESC;
+---
+#IMDB rating per genre 
+SELECT
+    Genre,
+    avg(SAFE_CAST(IMDB_Rating as BIGNUMERIC)) AS AVG_Rating
+  FROM
+    `imdb-429423.movie_rank.movies` AS movies
+  GROUP BY 1
+ORDER BY
+  AVG_Rating DESC
+LIMIT 10;
+---
+#Meta score Rating per Genre 
+SELECT
+    Genre,
+    avg(SAFE_CAST(Meta_score as BIGNUMERIC)) AS AVG_Meta_score 
+  FROM
+    `imdb-429423.movie_rank.movies` AS movies
+  GROUP BY 1
+ORDER BY
+  AVG_Meta_score DESC
+LIMIT 10;
+---
+#Earnings per Genre 
+SELECT 
+    Genre, 
+    SUM(Gross) as total_gross 
+  FROM 
+  `imdb-429423.movie_rank.movies` AS movies 
+  GROUP BY 1
+ORDER BY 
+  SUM(Gross) DESC
+LIMIT 10;
+---
+#Earnings per Certificate 
+SELECT 
+    Certificate, 
+    SUM(Gross) as total_gross 
+  FROM 
+  `imdb-429423.movie_rank.movies` AS movies 
+  GROUP BY 1
+ORDER BY 
+  SUM(Gross) DESC
+LIMIT 10;
+---
+#IMDB rating per director 
+SELECT 
+    Director,
+    MAX(SAFE_CAST(IMDB_Rating as BIGNUMERIC)) AS IMDB_RATING,
+  FROM 
+   `imdb-429423.movie_rank.movies` AS movies
+  GROUP BY 1
+  ORDER BY IMDB_RATING DESC
+LIMIT 10
+---
+#counting number of stars that appear the most within dataset 
+SELECT
+    Star1,
+    COUNT(*) AS Star1Count
+  FROM
+    `imdb-429423.movie_rank.movies`
+  GROUP BY 1
+  HAVING COUNT(*) > 2
+UNION ALL
+SELECT
+    Star2,
+    COUNT(*) AS Star2Count
+  FROM
+    `imdb-429423.movie_rank.movies`
+  GROUP BY 1
+  HAVING COUNT(*) > 2
+UNION ALL
+SELECT
+    Star3,
+    COUNT(*) AS Star3Count
+  FROM
+    `imdb-429423.movie_rank.movies`
+  GROUP BY 1
+  HAVING COUNT(*) > 2
+UNION ALL
+SELECT
+    Star4,
+    COUNT(*) AS Star4Count
+  FROM
+    `imdb-429423.movie_rank.movies`
+  GROUP BY 1
+  HAVING COUNT(*) > 2;
+#Tom Hanks appears 12 times, 
+#Followed by Robert De Niro at 11 times,
+#Clint Eastwood and Al Pacino 10 times
+
+--
+SELECT min(released_year)
+FROM 
+`imdb-429423.movie_rank.movies`
+#1920
+
+--
+SELECT Released_Year,
+FROM 
+`imdb-429423.movie_rank.movies`
+ORDER BY Released_Year
